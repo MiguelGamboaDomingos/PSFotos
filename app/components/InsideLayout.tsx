@@ -20,7 +20,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { FIREBASE_AUTH } from '../../firebaseConfig';
 import { Button, Avatar } from 'react-native-paper';
-import FloatingActionButton from './components/FloatingActionButton';
+import FloatingActionButton from './FloatingActionButton';
 
 interface RouterProps {
   navigation: any;
