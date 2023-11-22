@@ -4,7 +4,7 @@
  *  - Diangana Patriarca Ferraz Fortuna (Número de Matrícula: 20190442, Email: dianganaf12@gmail.com)
  *  - Marcelo Bastos (Número de Matrícula: 20181641, Email: marcelo.atkins@gmail.com)
  * 
- * Professor: João Costa
+ * Professor: João Costa 
  * Cadeira: Aplicações Móveis
  * Ano Letivo: 2023/24
  * Curso: Engenharia Informática

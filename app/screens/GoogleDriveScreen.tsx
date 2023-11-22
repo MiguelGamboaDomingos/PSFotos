@@ -1,104 +1,113 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Linking } from 'react-native';
-import { WebView } from 'react-native-webview';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, BackHandler } from 'react-native';
+import { WebView, WebViewNavigation } from 'react-native-webview';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as AuthSession from 'expo-auth-session';
-
-const GoogleDriveScreen: React.FC = () => {
-  const googleDriveClientId = '695981301303-jiv7qj9urlsgbmga5m0lu2h6qk4clu18.apps.googleusercontent.com';
-
+import * as firebase from 'firebase/app';
+import 'firebase/firestore';
+import 'firebase/auth'; // Adicionando a importação do módulo de autenticação
+const DropboxScreen = () => {
+  const dropboxAppKey = 'zvx7p7uchb2pwoy';
+  const redirectUri = 'exp://localhost:19000'; // Atualize com a porta do seu servidor Expo
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const navigation = useNavigation();
+  const webViewRef = useRef<WebView | null>(null);
+
+  const htmlContent = `
+    <html>
+      <body>
+        <script>
+          function handleAuthResponse() {
+            const accessToken = window.location.hash.split('=')[1];
+            window.ReactNativeWebView.postMessage(accessToken);
+          }
+
+          window.location.href = "https://www.dropbox.com/oauth2/authorize?client_id=${dropboxAppKey}&response_type=token&redirect_uri=${redirectUri}";
+        </script>
+      </body>
+    </html>
+  `;
 
   useEffect(() => {
-    const checkAccessToken = async () => {
-      const storedToken = await AsyncStorage.getItem('googleDriveAccessToken');
-      if (storedToken) {
-        setAccessToken(storedToken);
-      }
+    const handleBackButton = () => {
+      handleBackPress();
+      return true;
     };
+    BackHandler.addEventListener('hardwareBackPress', handleBackButton);
 
-    checkAccessToken();
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackButton);
+    };
   }, []);
 
-  const handleLogin = async () => {
-    const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+  useEffect(() => {
+    if (accessToken) {
+      storeTokenInFirestore(accessToken);
+      console.log('Access Token:', accessToken);
+      navigation.goBack();
+    }
+  }, [accessToken, navigation]);
 
-    const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${googleDriveClientId}&redirect_uri=${redirectUri}&response_type=token&scope=https://www.googleapis.com/auth/drive.file`;
+  const handleBackPress = () => {
+    if (webViewRef.current) {
+      webViewRef.current.goBack();
+    }
+    return true; // Alteração aqui, retornar true indica que o evento de pressionar o botão foi tratado
+  };
 
-    try {
-      const response = await AuthSession.startAsync({ authUrl });
-
-      if (response.type === 'success' && response.params.access_token) {
-        await AsyncStorage.setItem('googleDriveAccessToken', response.params.access_token);
-        setAccessToken(response.params.access_token);
-      }
-    } catch (error) {
-      console.error('Erro ao iniciar a sessão:', error);
+  const onNavigationStateChange = (navState: WebViewNavigation) => {
+    // Atualizar o estado do WebView
+    if (navState.canGoBack) {
+      BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    } else {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
     }
   };
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem('googleDriveAccessToken');
-    setAccessToken(null);
-  };
+  const storeTokenInFirestore = async (token: string) => {
+    const user = firebase.auth().currentUser;
 
-  const handleOpenLink = (url: string) => {
-    Linking.openURL(url);
+    if (user) {
+      const userId = user.uid;
+      const firestore = firebase.firestore();
+      const userRef = firestore.collection('users').doc(userId);
+
+      // Armazenar o token no Firestore
+      await userRef.update({ dropboxAccessToken: token });
+
+      // Você também pode optar por armazenar o token em AsyncStorage se desejar
+      await AsyncStorage.setItem('dropboxAccessToken', token);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {accessToken ? (
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text>Logout</Text>
-        </TouchableOpacity>
-      ) : (
-        <>
-          <TouchableOpacity onPress={handleLogin} style={styles.loginButton}>
-            <Text>Login with Google Drive</Text>
-          </TouchableOpacity>
+      <WebView
+        ref={(ref) => (webViewRef.current = ref)}
+        source={{ html: htmlContent }}
+        onMessage={(event) => {
+          const token = event.nativeEvent.data;
+          setAccessToken(token);
+        }}
+        onNavigationStateChange={onNavigationStateChange}
+      />
 
-          <TouchableOpacity onPress={() => handleOpenLink('')} style={styles.cancelButton}>
-            <Text>Cancelar</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {accessToken && (
-        <WebView
-          source={{ uri: 'https://www.google.com/drive/' }}
-          style={styles.webView}
-        />
-      )}
+      
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loginButton: {
-    padding: 10,
-    backgroundColor: 'lightblue',
-  },
-  logoutButton: {
-    padding: 10,
-    backgroundColor: 'lightcoral',
+    justifyContent: 'flex-end',
   },
   cancelButton: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 10,
-    backgroundColor: 'lightcoral',
+    width: '100%',
+    backgroundColor: 'lightgray',
+    padding: 15,
     alignItems: 'center',
-  },
-  webView: {
-    flex: 1,
   },
 });
 
-export default GoogleDriveScreen;
+export default DropboxScreen;

@@ -16,84 +16,85 @@
  * Além disso, oferece recursos para adicionar utilizadores, criar álbuns e outras funcionalidades.
  */
 
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { FIREBASE_AUTH } from '../../firebaseConfig';  // Certifique-se de que o caminho do arquivo está correto
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+
 
 const Login = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState (false);
+  const [loading, setLoading] = useState(false);
   const auth = FIREBASE_AUTH;
 
-  
-const handleLogin = async () => {
-  console.log('Botão de Login pressionado');
-  setLoading(true);
-  try {
-    const response = await signInWithEmailAndPassword(FIREBASE_AUTH, email, password);
-    console.log('Login bem-sucedido');
-    // Adicione a navegação aqui após o login bem-sucedido
-    navigation.navigate('InsideLayout');
-  } catch (error: any) {
-    console.error('Falha ao entrar:', error.code);
-    // Trate os erros específicos do Firebase
-    if (error.code === 'auth/user-not-found') {
-      alert('Usuário não encontrado. Verifique suas credenciais ou registre-se.');
-    } else if (error.code === 'auth/wrong-password') {
-      alert('Senha incorreta. Por favor, tente novamente.');
-    } else {
-      alert('Falha ao entrar. Por favor, tente novamente.');
+  const handleLogin = async () => {
+    console.log('Botão de Login pressionado');
+    setLoading(true);
+    try {
+      const response = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Login bem-sucedido');
+      // Adicionar a navegação aqui após o login bem-sucedido
+      navigation.navigate('InsideLayout');
+    } catch (error: any) {
+      console.error('Falha ao entrar:', error.code);
+      // Tratar os erros específicos do Firebase
+      if (error.code === 'auth/user-not-found') {
+        alert('Usuário não encontrado. Verifique suas credenciais ou registre-se.');
+      } else if (error.code === 'auth/wrong-password') {
+        alert('Senha incorreta. Por favor, tente novamente.');
+      } else {
+        alert('Falha ao entrar. Por favor, tente novamente.');
+      }
     }
-  }
-  setLoading(false);
-};
-  const navigateToRegister  = async () => {
-    // lógica de registo
+    setLoading(false);
+  };
+
+  const navigateToRegister = async () => {
     console.log('Botão de Signup pressionado');
     setLoading(true);
-    try{
-        const response = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
-        alert('Verifique o email');
-    }catch(error: any){
-        alert('Falha ao entrar');
+    try {
+      const response = await createUserWithEmailAndPassword(auth, email, password);
+      alert('Verifique o email');
+      // Após o registro bem-sucedido, navegue para a tela de login
+      navigation.navigate('Login');
+    } catch (error: any) {
+      alert('Falha ao entrar');
     }
     setLoading(false);
   };
 
   return (
     <View style={styles.container}>
-        <KeyboardAvoidingView behavior='position'>
+      <KeyboardAvoidingView behavior='position'>
         <Text style={styles.title}>Conecte-se</Text>
         <TextInput
-            style={styles.input}
-            placeholder="Email"
-            autoCapitalize="none"
-            
-            value={email}
-            onChangeText={setEmail}
+          style={styles.input}
+          placeholder="Email"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
         <TextInput
-            style={styles.input}
-            placeholder="Palavra-passe"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={true}
+          style={styles.input}
+          placeholder="Palavra-passe"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={true}
         />
-        {loading ? (<ActivityIndicator size="large" color="#0000ff"/>
-            ) : (
-            <>
-                <Button title="Entrar" onPress={handleLogin} />
-                <Text style={styles.registerText} onPress={navigateToRegister}>
-                    Não tem uma conta? Registre-se aqui.
-                </Text>
-            </>
-            )}
-        </KeyboardAvoidingView>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <>
+            <Button title="Entrar" onPress={handleLogin} />
+            <Text style={styles.registerText} onPress={navigateToRegister}>
+              Não tem uma conta? Registre-se aqui.
+            </Text>
+          </>
+        )}
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -124,4 +125,3 @@ const styles = StyleSheet.create({
 });
 
 export default Login;
- 

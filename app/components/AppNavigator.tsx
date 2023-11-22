@@ -24,6 +24,7 @@ import Detalhes from '../screens/Detalhes';
 import DropboxScreen from '../screens/DropboxScreen';
 import ICloudScreen from '../screens/ICloudScreen';
 import GoogleDriveScreen from '../screens/GoogleDriveScreen';
+import AddAlbumScreen from '../screens/AddAlbumScreen';
 
 
 const Stack = createStackNavigator();
@@ -34,9 +35,10 @@ export const AppNavigator = () => (
     <Stack.Screen name="InsideLayout" component={InsideLayout} options={{ headerShown: false }} />
     <Stack.Screen name="DropboxScreen" component={DropboxScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Detalhes" component={Detalhes} options={{ headerShown: true }} />
-    {/* Adicione as novas telas aqui */}
+    {/* Adicionar as novas telas aqui */}
     <Stack.Screen name="GoogleDriveScreen" component={GoogleDriveScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ICloudScreen" component={ICloudScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="AddAlbumScreen" component={AddAlbumScreen} options={{ headerShown: false }} />
    
   </Stack.Navigator>
 );
